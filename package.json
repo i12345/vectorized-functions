@@ -1,6 +1,6 @@
 {
   "name": "vectorized-functions",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Vectorized function calls with potential to be specialized for optimization",
   "types": "dist/types/index.d.ts",
   "main": "dist/index.js",
