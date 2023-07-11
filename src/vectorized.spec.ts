@@ -187,4 +187,160 @@ describe("VectorFunction", () => {
                 assert.equal(singleResult[i], vectorResult[i])
         }
     })
+
+    it("Can vectorized multiple parameters", () => {
+        interface MathOp {
+            calc(a: number, b: number): number
+        }
+
+        class Addition implements MathOp {
+            calc(a: number, b: number): number {
+                return a + b
+            }
+        }
+
+        class Subtraction implements MathOp {
+            @vectorized(Subtraction.calc_vectorized)
+            calc(a: number, b: number): number {
+                return a - b
+            }
+
+            private static calc_vectorized(this: Subtraction, a: Float64Array, b: Float64Array): Float64Array {
+                const c = new Float64Array(a.length)
+                for (let i = 0; i < c.length; i++)
+                    c[i] = a[i] - b[i]
+                return c
+            }
+        }
+
+        class Multiplication implements MathOp {
+            @vectorized(Multiplication.calc_vectorized)
+            calc(a: number, b: number): number {
+                return a * b
+            }
+
+            private static calc_vectorized(this: Multiplication, a: Float64Array, b: Float64Array): Float64Array {
+                const c = new Float64Array(a.length)
+                for (let i = 0; i < c.length; i++)
+                    c[i] = a[i] * b[i]
+                return c
+            }
+        }
+
+        class Composite implements MathOp {
+            constructor(public readonly ops: MathOp[]) { }
+            
+            calc(a: number, b: number): number {
+                for (const op of this.ops) a = op.calc(a, b)
+                return a
+            }
+        }
+
+        const MathOp_calc_vectorized = new VectorFunction<
+            MathOp,
+            "calc",
+            MathOp["calc"],
+            (a: number[], b: number[]) => number[]
+        >("calc", [0, 1])
+        
+        const input_A = [234, 934, 328, 231, 23]
+        const input_B = [45, 349, 239, 320, 17]
+        const ops = [
+            new Addition(),
+            new Subtraction(),
+            new Multiplication(),
+            new Composite([
+                new Addition(),
+                new Subtraction(),
+                new Multiplication(),
+            ])
+        ]
+
+        for (const op of ops) {
+            const singleResult = input_A.map((a, i) => op.calc(a, input_B[i]))
+            const vectorResult = MathOp_calc_vectorized.call(op, input_A, input_B)
+            
+            assert.equal(singleResult.length, vectorResult.length)
+            for (let i = 0; i < singleResult.length; i++)
+                assert.equal(singleResult[i], vectorResult[i])
+        }
+    })
+
+    it("should fail when vector lengths differ", () => {
+        interface MathOp {
+            calc(a: number, b: number): number
+        }
+
+        class Addition implements MathOp {
+            calc(a: number, b: number): number {
+                return a + b
+            }
+        }
+
+        class Subtraction implements MathOp {
+            @vectorized(Subtraction.calc_vectorized)
+            calc(a: number, b: number): number {
+                return a - b
+            }
+
+            private static calc_vectorized(this: Subtraction, a: Float64Array, b: Float64Array): Float64Array {
+                const c = new Float64Array(a.length)
+                for (let i = 0; i < c.length; i++)
+                    c[i] = a[i] - b[i]
+                return c
+            }
+        }
+
+        class Multiplication implements MathOp {
+            @vectorized(Multiplication.calc_vectorized)
+            calc(a: number, b: number): number {
+                return a * b
+            }
+
+            private static calc_vectorized(this: Multiplication, a: Float64Array, b: Float64Array): Float64Array {
+                const c = new Float64Array(a.length)
+                for (let i = 0; i < c.length; i++)
+                    c[i] = a[i] * b[i]
+                return c
+            }
+        }
+
+        class Composite implements MathOp {
+            constructor(public readonly ops: MathOp[]) { }
+            
+            calc(a: number, b: number): number {
+                for (const op of this.ops) a = op.calc(a, b)
+                return a
+            }
+        }
+
+        const MathOp_calc_vectorized = new VectorFunction<
+            MathOp,
+            "calc",
+            MathOp["calc"],
+            (a: number[], b: number[]) => number[]
+        >("calc", [0, 1])
+        
+        const input_A = [234, 934, 328, 231, 23]
+        const input_B = [45, 349, 239, 320, 17, 23940234, 2349023, 23904, 234]
+        const ops = [
+            new Addition(),
+            new Subtraction(),
+            new Multiplication(),
+            new Composite([
+                new Addition(),
+                new Subtraction(),
+                new Multiplication(),
+            ])
+        ]
+
+        for (const op of ops) {
+            try {
+                MathOp_calc_vectorized.call(op, input_A, input_B)
+                assert.ok(false)
+            } catch {
+                assert.ok(true)
+            }
+        }
+    })
 })
