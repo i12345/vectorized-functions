@@ -1,6 +1,6 @@
 import { describe, it } from "mocha"
 import { assert } from "chai"
-import { VectorFunction, vectorized } from "./vectorized.js"
+import { ArrayVectorFunction, VectorFunction, vectorized } from "./vectorized.js"
 
 describe("Decorator", () => {
     it("Can be applied with default name", () => {
@@ -159,12 +159,13 @@ describe("VectorFunction", () => {
             }
         }
 
-        const MathOp_calc_vectorized = new VectorFunction<
+        const MathOp_calc_vectorized = new ArrayVectorFunction<
             MathOp,
             "calc",
             MathOp["calc"],
+            [true],
             (x: number[]) => number[]
-        >("calc")
+        >("calc", [true])
 
         const input = [234, 934, 328, 231, 23]
         const ops = [
@@ -236,12 +237,13 @@ describe("VectorFunction", () => {
             }
         }
 
-        const MathOp_calc_vectorized = new VectorFunction<
+        const MathOp_calc_vectorized = new ArrayVectorFunction<
             MathOp,
             "calc",
             MathOp["calc"],
+            [true, true],
             (a: number[], b: number[]) => number[]
-        >("calc", [0, 1])
+        >("calc", [true, true])
         
         const input_A = [234, 934, 328, 231, 23]
         const input_B = [45, 349, 239, 320, 17]
@@ -314,12 +316,13 @@ describe("VectorFunction", () => {
             }
         }
 
-        const MathOp_calc_vectorized = new VectorFunction<
+        const MathOp_calc_vectorized = new ArrayVectorFunction<
             MathOp,
             "calc",
             MathOp["calc"],
+            [true, true],
             (a: number[], b: number[]) => number[]
-        >("calc", [0, 1])
+        >("calc", [true, true])
         
         const input_A = [234, 934, 328, 231, 23]
         const input_B = [45, 349, 239, 320, 17, 23940234, 2349023, 23904, 234]
