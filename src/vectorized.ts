@@ -39,7 +39,7 @@ export abstract class VectorFunction<
     protected abstract vectorizeSingularCall(
         target: Target,
         singularMethod: Method,
-        params: Parameters<Vectorized>
+        params: VectorizedArgs
     ): ReturnType<Vectorized>
 }
 
